@@ -1,0 +1,5 @@
+"In Package","Blocking Type","Source Component Label","Source Component Name","Source Component Type","Target Component Label","Target Component Name","Target Component Type","Target Sub Component Name","Target Sub Component Type"
+"false","ignore__sys","Transfer Inventory Request","transfer_inventory_request__c","Object","Base Transfer Inventory Request","transfer_inventory_request__c.base__v","Objecttype","",""
+"true","block__sys","Transfer Inventory Request","transfer_inventory_request__c","Object","Bicycle Store","bicycle_store__c","Object","",""
+"true","block__sys","Transfer Inventory Request","transfer_inventory_request__c","Object","Transfer Inventory Request Status","transfer_inventory_request_status__c","Picklist","",""
+"false","block__sys","Transfer Inventory Request","transfer_inventory_request__c","Object","Default Status","default_status__v","Picklist","",""

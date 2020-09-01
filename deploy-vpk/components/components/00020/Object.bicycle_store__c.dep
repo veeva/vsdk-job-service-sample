@@ -1,0 +1,3 @@
+"In Package","Blocking Type","Source Component Label","Source Component Name","Source Component Type","Target Component Label","Target Component Name","Target Component Type","Target Sub Component Name","Target Sub Component Type"
+"false","ignore__sys","Bicycle Store","bicycle_store__c","Object","Base Bicycle Store","bicycle_store__c.base__v","Objecttype","",""
+"false","block__sys","Bicycle Store","bicycle_store__c","Object","Default Status","default_status__v","Picklist","",""

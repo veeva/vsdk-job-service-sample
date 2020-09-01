@@ -1,0 +1,1 @@
+<stepheader><label>DSET-00002-Bicycle Store</label><steprequired>False</steprequired><checksum>4bf78d3cf97226df511264da7a5735c5</checksum><datastepheader><object>bicycle_store__c</object><idparam>name__v</idparam><datatype>Object</datatype><action>Upsert</action><recordmigrationmode>False</recordmigrationmode><recordcount>2</recordcount></datastepheader></stepheader>

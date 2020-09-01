@@ -1,0 +1,12 @@
+<vaultpackage xmlns="https://veevavault.com/">
+    <name>PKG-vsdk-job-service-sample-code</name>
+    <source>
+        <vault></vault>
+        <author>Vault Developer Support</author>
+    </source>
+    <summary>The vsdk-job-service-sample project source code.</summary>
+    <description>This VPK contains the Vault Java SDK source code for the vsdk-job-service-service-sample project.</description>
+    <javasdk>
+        <deployment_option>incremental</deployment_option>
+    </javasdk>
+</vaultpackage>

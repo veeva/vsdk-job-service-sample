@@ -1,0 +1,2 @@
+"In Package","Blocking Type","Source Component Label","Source Component Name","Source Component Type","Target Component Label","Target Component Name","Target Component Type","Target Sub Component Name","Target Sub Component Type"
+"false","cascade_create__sys","Transfer Store Inventory to new Store","transfer_product_to_new_store__c","Jobmetadata","","com.veeva.vault.custom.processors.JobServiceSampleTransferProductsToNewStoreJob","Sdkjob","",""

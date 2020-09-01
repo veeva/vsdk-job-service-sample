@@ -1,0 +1,4 @@
+"In Package","Blocking Type","Source Component Label","Source Component Name","Source Component Type","Target Component Label","Target Component Name","Target Component Type","Target Sub Component Name","Target Sub Component Type"
+"true","block__sys","Bicycle Accessory","bicycle_accessory__c","Object","Bicycle Store","bicycle_store__c","Object","",""
+"false","block__sys","Bicycle Accessory","bicycle_accessory__c","Object","Default Status","default_status__v","Picklist","",""
+"false","ignore__sys","Bicycle Accessory","bicycle_accessory__c","Object","Base Bicycle Accessory","bicycle_accessory__c.base__v","Objecttype","",""

@@ -1,0 +1,1 @@
+<stepheader><label>DSET-00002-Bicycle Accessory</label><steprequired>False</steprequired><checksum>1204fcc4aee385f2b14059b92c9cdd99</checksum><datastepheader><object>bicycle_accessory__c</object><idparam>name__v</idparam><datatype>Object</datatype><action>Upsert</action><recordmigrationmode>False</recordmigrationmode><recordcount>4</recordcount></datastepheader></stepheader>

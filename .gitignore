@@ -1,0 +1,9 @@
+.settings/
+.classpath
+.gitattributes
+.project
+.idea
+/target/
+.DS_Store
+/deployment/
+/__MACOSX/
