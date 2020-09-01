@@ -1,6 +1,6 @@
 # Vault Java SDK Sample - vsdk-job-service-sample
 
-**Please see the [project wiki](https://github.com/veeva/vsdk-job-service-sample/-/wikis/home) for a detailed walkthrough**.
+**Please see the [project wiki](https://github.com/veeva/vsdk-job-service-sample/wiki) for a detailed walkthrough**.
 
 The **vsdk-job-service-sample** project covers the use of the SDK job Service with SDK Triggers. The Trigger will accomplish the following:
 
