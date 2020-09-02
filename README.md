@@ -2,10 +2,7 @@
 
 **Please see the [project wiki](https://github.com/veeva/vsdk-job-service-sample/wiki) for a detailed walkthrough**.
 
-The **vsdk-job-service-sample** project covers the use of the SDK job Service with SDK Triggers. The Trigger will accomplish the following:
-
--   Validate that the product exists and show a translated error in French if it does not.
--   Validate that the order quantity is less than the quantity in stock and show a translated error in French if it does not.
+The **vsdk-job-service-sample** project covers the use of the SDK Job Service and creation of Custom Job Processors.
 
 ## How to import
 
