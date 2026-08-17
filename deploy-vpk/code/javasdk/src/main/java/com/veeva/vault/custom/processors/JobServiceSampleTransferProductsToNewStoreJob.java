@@ -3,10 +3,16 @@ package com.veeva.vault.custom.processors;
 import com.veeva.vault.sdk.api.core.*;
 import com.veeva.vault.sdk.api.data.PositionalRecordId;
 import com.veeva.vault.sdk.api.data.Record;
+import com.veeva.vault.sdk.api.data.RecordBatchDeleteRequest;
+import com.veeva.vault.sdk.api.data.RecordBatchOperation;
+import com.veeva.vault.sdk.api.data.RecordBatchSaveRequest;
 import com.veeva.vault.sdk.api.data.RecordService;
 import com.veeva.vault.sdk.api.job.*;
-import com.veeva.vault.sdk.api.query.QueryResponse;
+import com.veeva.vault.sdk.api.query.Query;
+import com.veeva.vault.sdk.api.query.QueryExecutionRequest;
 import com.veeva.vault.sdk.api.query.QueryService;
+import com.veeva.vault.sdk.api.token.TokenRequest;
+import com.veeva.vault.sdk.api.token.TokenService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -34,38 +40,58 @@ public class JobServiceSampleTransferProductsToNewStoreJob implements Job {
         @SuppressWarnings("unchecked")
         List<JobItem> jobItems = VaultCollections.newList();
 
-        // Get ID's of all Bicycle accessories sold by the old store
-        StringBuilder bicycleAccessoryQuerySB = new StringBuilder()
-                .append("SELECT id, name__v, price__c, quantity__c FROM bicycle_accessory__c WHERE bicycle_store__cr.id='")
-                .append(existingBicycleStoreId)
-                .append("' LIMIT 1");
+        // Get ID's of all Bicycle accessories sold by the old store.
+        // The store ID is supplied through a TokenRequest and the query is built with newQueryBuilder()
+        // instead of concatenating the ID into a raw query String.
+        TokenService tokenService = ServiceLocator.locate(TokenService.class);
+        TokenRequest tokenRequest = tokenService.newTokenRequestBuilder()
+                .withValue("Custom.existing_store_id", existingBicycleStoreId)
+                .build();
 
-        logger.log("Running Bicycle Accessory VQL query: " + bicycleAccessoryQuerySB.toString());
-        QueryResponse accessoryQueryResponse = queryService.query(bicycleAccessoryQuerySB.toString());
-        logger.log("Bicycle Accessory VQL query returned " + accessoryQueryResponse.getResultCount() + " results");
+        Query bicycleAccessoryQuery = queryService.newQueryBuilder()
+                .withSelect(VaultCollections.asList("id", "name__v", "price__c", "quantity__c"))
+                .withFrom("bicycle_accessory__c")
+                .withWhere("bicycle_store__cr.id = ${Custom.existing_store_id}")
+                .build();
 
-        // Iterate over Bicycle Accessory Query Results
-        if(accessoryQueryResponse.getResultCount() > 0 && newBicycleStoreId != null) {
-            accessoryQueryResponse.streamResults().forEach(queryResult -> {
-                JobItem bicycleAccessoryItem = jobInitContext.newJobItem();
+        logger.log("Running Bicycle Accessory VQL query for existing store: " + existingBicycleStoreId);
 
-                // Get id, name, price and quantity of the bicycle accessory
-                String bicycleAccessoryId = queryResult.getValue("id", ValueType.STRING);
-                String bicycleAccessoryName = queryResult.getValue("name__v", ValueType.STRING);
-                BigDecimal bicycleAccessoryPrice = queryResult.getValue("price__c", ValueType.NUMBER);
-                BigDecimal bicycleAccessoryQuantity = queryResult.getValue("quantity__c", ValueType.NUMBER);
+        QueryExecutionRequest queryRequest = queryService.newQueryExecutionRequestBuilder()
+                .withQuery(bicycleAccessoryQuery)
+                .withTokenRequest(tokenRequest)
+                .build();
 
-                // Set JobItem values
-                bicycleAccessoryItem.setValue("bicycleAccessoryId", bicycleAccessoryId);
-                bicycleAccessoryItem.setValue("bicycleAccessoryName", bicycleAccessoryName);
-                bicycleAccessoryItem.setValue("bicycleAccessoryPrice", bicycleAccessoryPrice);
-                bicycleAccessoryItem.setValue("bicycleAccessoryQuantity", bicycleAccessoryQuantity);
-                bicycleAccessoryItem.setValue("newBicycleStoreId", newBicycleStoreId);
+        queryService.query(queryRequest)
+                .onSuccess(queryResponse -> {
+                    logger.log("Bicycle Accessory VQL query returned " + queryResponse.getResultCount() + " results");
 
-                logger.log("Added new job item,  bicycleAccessoryId: " + ",  newBicycleStoreId: " + newBicycleStoreId);
-                jobItems.add(bicycleAccessoryItem);
-            });
-            logger.log("Job Input Items: " + jobItems.toString());
+                    // Iterate over Bicycle Accessory Query Results
+                    if(queryResponse.getResultCount() > 0 && newBicycleStoreId != null) {
+                        queryResponse.streamResults().forEach(queryResult -> {
+                            JobItem bicycleAccessoryItem = jobInitContext.newJobItem();
+
+                            // Get id, name, price and quantity of the bicycle accessory
+                            String bicycleAccessoryId = queryResult.getValue("id", ValueType.STRING);
+                            String bicycleAccessoryName = queryResult.getValue("name__v", ValueType.STRING);
+                            BigDecimal bicycleAccessoryPrice = queryResult.getValue("price__c", ValueType.NUMBER);
+                            BigDecimal bicycleAccessoryQuantity = queryResult.getValue("quantity__c", ValueType.NUMBER);
+
+                            // Set JobItem values
+                            bicycleAccessoryItem.setValue("bicycleAccessoryId", bicycleAccessoryId);
+                            bicycleAccessoryItem.setValue("bicycleAccessoryName", bicycleAccessoryName);
+                            bicycleAccessoryItem.setValue("bicycleAccessoryPrice", bicycleAccessoryPrice);
+                            bicycleAccessoryItem.setValue("bicycleAccessoryQuantity", bicycleAccessoryQuantity);
+                            bicycleAccessoryItem.setValue("newBicycleStoreId", newBicycleStoreId);
+
+                            logger.log("Added new job item,  bicycleAccessoryId: " + ",  newBicycleStoreId: " + newBicycleStoreId);
+                            jobItems.add(bicycleAccessoryItem);
+                        });
+                        logger.log("Job Input Items: " + jobItems.toString());
+                    }
+                })
+                .execute();
+
+        if (!jobItems.isEmpty()) {
             return jobInitContext.newJobInput(jobItems);
         }
         logger.log("Job Input is empty");
@@ -140,33 +166,53 @@ public class JobServiceSampleTransferProductsToNewStoreJob implements Job {
         JobTask task = jobProcessContext.getCurrentTask();
         TaskOutput taskOutput = task.getTaskOutput();
 
-        // Batch save new records
-        BatchOperation<PositionalRecordId, BatchOperationError> batchSaveResult = recordService.batchSaveRecords(clonedBicycleAccessoryRecords);
+        // Track whether the clone save encountered any errors, so we only
+        // delete the originals once their clones have been saved. A single
+        // element array is used because variables captured by the callback
+        // lambdas must be effectively final.
+        boolean[] cloneSaveFailed = {false};
 
-        // Batch delete old records
-        BatchOperation<PositionalRecordId, BatchOperationError> batchDeleteResult = recordService.batchDeleteRecords(deletedBicycleAccessoryRecords);
+        // Batch save new (clone) records
+        RecordBatchOperation batchSaveResult = recordService.batchSaveRecords(
+                recordService.newRecordBatchSaveRequestBuilder()
+                        .withRecords(clonedBicycleAccessoryRecords)
+                        .build());
 
         batchSaveResult.onSuccesses(positionalRecordIds -> {
             taskOutput.setState(TaskState.SUCCESS);
             logger.log("Clone Record Save successful");
         });
-        batchDeleteResult.onSuccesses(positionalRecordIds -> {
-            taskOutput.setState(TaskState.SUCCESS);
-            logger.log("Old Record Delete successful");
-        });
-
         batchSaveResult.onErrors( batchOperationErrors -> {
+            cloneSaveFailed[0] = true;
             taskOutput.setState(TaskState.ERRORS_ENCOUNTERED);
             taskOutput.setValue("firstError", batchOperationErrors.get(0).getError().getMessage());
             logger.log("Clone Record Save unsuccessful due to: " + batchOperationErrors.get(0).getError().getMessage());
+        });
+        batchSaveResult.execute();
+
+        // Only delete the original records if the clones were saved successfully.
+        // Deleting unconditionally would lose the accessories entirely when the
+        // clone save fails (deleted from the old store, never created on the new one).
+        if (cloneSaveFailed[0]) {
+            logger.log("Skipping delete of original records because the clone save failed");
+            return;
+        }
+
+        // Batch delete old records
+        RecordBatchOperation batchDeleteResult = recordService.batchDeleteRecords(
+                recordService.newRecordBatchDeleteRequestBuilder()
+                        .withRecords(deletedBicycleAccessoryRecords)
+                        .build());
+
+        batchDeleteResult.onSuccesses(positionalRecordIds -> {
+            taskOutput.setState(TaskState.SUCCESS);
+            logger.log("Old Record Delete successful");
         });
         batchDeleteResult.onErrors( batchOperationErrors -> {
             taskOutput.setState(TaskState.ERRORS_ENCOUNTERED);
             taskOutput.setValue("firstError", batchOperationErrors.get(0).getError().getMessage());
             logger.log("Old Record Delete unsuccessful due to: " + batchOperationErrors.get(0).getError().getMessage());
         });
-
-        batchSaveResult.execute();
         batchDeleteResult.execute();
     }
 
@@ -181,12 +227,10 @@ public class JobServiceSampleTransferProductsToNewStoreJob implements Job {
         JobLogger logger = jobCompletionContext.getJobLogger();
         logger.log("completeWithError: " + result.getNumberFailedTasks() + "tasks failed out of " + result.getNumberTasks());
 
-        List<JobTask> tasks = jobCompletionContext.getTasks();
+        List<JobTask> tasks = jobCompletionContext.getErrorTasks();
         for (JobTask task : tasks) {
             TaskOutput taskOutput = task.getTaskOutput();
-            if (TaskState.ERRORS_ENCOUNTERED.equals(taskOutput.getState())) {
-                logger.log(task.getTaskId() + " failed with error message " + taskOutput.getValue("firstError", JobValueType.STRING));
-            }
+            logger.log(task.getTaskId() + " failed with error message " + taskOutput.getValue("firstError", JobValueType.STRING));
         }
     }
 }
