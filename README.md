@@ -1,8 +1,11 @@
 # Vault Java SDK Sample - vsdk-job-service-sample
 
-**Please see the [project wiki](https://github.com/veeva/vsdk-job-service-sample/wiki) for a detailed walkthrough**.
+**Please see the [project wiki](https://gitlab.veevadev.com/veevavaultdevsupport/vsdk-job-service-sample/-/wikis/home) for a detailed walkthrough**.
 
-The **vsdk-job-service-sample** project covers the use of the SDK Job Service and creation of Custom Job Processors.
+The **vsdk-job-service-sample** project covers the use of the SDK job Service with SDK Triggers. The Trigger will accomplish the following:
+
+-   Validate that the product exists and show a translated error in French if it does not.
+-   Validate that the order quantity is less than the quantity in stock and show a translated error in French if it does not.
 
 ## How to import
 
@@ -19,8 +22,8 @@ For Eclipse this is done by:
 
 For this project, the custom trigger and necessary vault components are contained in the two separate vault packages (VPK). The VPKs are located in the project's **deploy-vpk** directory  and **need to be deployed to your vault** prior to debugging these use cases:
 
-1.  Clone or download the sample Maven project [vSDK job Service Sample project](https://github.com/veeva/vsdk-job-service-sample) from Github.
-2.  Run through the [Getting Started](https://developer.veevavault.com/sdk/#getting-started) guide to set up your development environment.
+1.  Clone or download the sample Maven project [vSDK job Service Sample project](https://gitlab.veevadev.com/veevavaultdevsupport/vsdk-job-service-sample) from Gitlab.
+2.  Run through the [Getting Started](https://general.veevavault.dev/vault-sdk/getting-started/) guide to set up your development environment.
 3.  Log in to your vault and navigate to **Admin > Deployment > Inbound Packages** and click **Import**:
 4.  Locate and select the following file in your downloaded project file:
 
@@ -40,7 +43,7 @@ The Jobmetadata Component configuration is only accessible via MDL.
 
 This code serves as an example and is not meant to be used for production use.
 
-Copyright 2020 Veeva Systems Inc.
+Copyright 2026 Veeva Systems Inc.
  
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
